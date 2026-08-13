@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Play music</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Arial, sans-serif; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+    #controls { text-align:center; }
+    #play-btn { font-size:18px; padding:10px 18px; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <p id="status">Trying to play audio...</p>
+    <button id="play-btn" style="display:none">Play audio</button>
+  </div>
+
+  <!-- Use the MP4 (H.264 + AAC) file at the repo root named music.mp4 -->
+  <audio id="bg-audio" src="music.mp4" preload="auto" loop playsinline></audio>
+
+  <script>
+    const audio = document.getElementById('bg-audio');
+    const btn = document.getElementById('play-btn');
+    const status = document.getElementById('status');
+
+    function showPlayButton() {
+      status.textContent = 'Autoplay blocked — tap or click to play.';
+      btn.style.display = 'inline-block';
+      btn.addEventListener('click', () => {
+        audio.play().catch(()=>{});
+        btn.style.display = 'none';
+      }, { once: true });
+    }
+
+    // Try to play on load. Modern browsers often block autoplay without user interaction.
+    document.addEventListener('DOMContentLoaded', () => {
+      const p = audio.play();
+      if (p !== undefined) {
+        p.then(() => {
+          status.textContent = 'Playing...';
+          btn.style.display = 'none';
+        }).catch(() => {
+          // Autoplay was probably blocked
+          showPlayButton();
+        });
+      } else {
+        // Older browsers — show button
+        showPlayButton();
+      }
+    });
+
+    // Many mobile browsers allow playback after a user gesture; listen for first interaction
+    function resumeAudioOnInteraction() {
+      audio.play().then(() => {
+        status.textContent = 'Playing...';
+        btn.style.display = 'none';
+      }).catch(() => {
+        // still blocked
+      });
+      window.removeEventListener('touchstart', resumeAudioOnInteraction);
+      window.removeEventListener('click', resumeAudioOnInteraction);
+    }
+    window.addEventListener('touchstart', resumeAudioOnInteraction, { passive: true });
+    window.addEventListener('click', resumeAudioOnInteraction, { passive: true });
+  </script>
+</body>
+</html>
