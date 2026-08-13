@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Play music.mp4</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:720px;margin:3rem auto;padding:1rem}
+    pre{background:#f6f8fa;padding:0.75rem;border-radius:6px;overflow:auto}
+  </style>
+</head>
+<body>
+  <h1>Play music.mp4 from this repository</h1>
+  <p>This page embeds the file music.mp4 stored in this repo. If your browser supports MP4/AAC it should play.</p>
+
+  <audio controls preload="metadata">
+    <source src="https://raw.githubusercontent.com/6b96pg7r5r-arch/Farah-Mahmoud-/main/music.mp4" type="audio/mp4">
+    Your browser does not support the audio element. Try downloading the file and playing it locally.
+  </audio>
+
+  <h2>If playback fails</h2>
+  <ol>
+    <li>Make sure you opened the page via a web server — some browsers block media fetched from raw file responses when opened as file://. Quick test using Python in the repo directory:
+      <pre><code>python3 -m http.server 8000
+# then open http://localhost:8000/play-music.html</code></pre>
+    </li>
+    <li>If the browser reports "unsupported format" convert to a widely supported audio format (MP3) and upload it alongside the MP4. Example commands (run locally):
+      <pre><code># inspect codecs
+ffprobe music.mp4
+
+# web-optimize (move moov atom to front so streaming starts immediately)
+ffmpeg -i music.mp4 -c copy -movflags +faststart music-faststart.mp4
+
+# convert to MP3 (high compatibility)
+ffmpeg -i music.mp4 -b:a 192k music.mp3
+
+# convert to OGG (optional fallback)
+ffmpeg -i music.mp4 -c:a libvorbis music.ogg</code></pre>
+    </li>
+    <li>After converting, add the converted files to the repo and update the audio tag to include multiple sources, e.g.:
+      <pre><code>&lt;audio controls&gt;
+  &lt;source src="/path/music.mp4" type="audio/mp4"&gt;
+  &lt;source src="/path/music.mp3" type="audio/mpeg"&gt;
+  &lt;source src="/path/music.ogg" type="audio/ogg"&gt;
+&lt;/audio&gt;</code></pre>
+    </li>
+  </ol>
+
+  <h2>Notes</h2>
+  <ul>
+    <li>The raw GitHub URL used above is: https://raw.githubusercontent.com/6b96pg7r5r-arch/Farah-Mahmoud-/main/music.mp4</li>
+    <li>GitHub raw works for quick testing but is not a production CDN. For reliable delivery use GitHub Pages, S3/CloudFront, Netlify, or another static host.</li>
+  </ul>
+
+  <p>If you want I can: <strong>(A)</strong> add MP3/OGG copies to this repo if you provide the converted files, or <strong>(B)</strong> give precise ffmpeg commands for a target bitrate/size, or <strong>(C)</strong> enable a simple static demo via GitHub Pages (I can add a small index and instructions — you will still need to enable Pages in repo settings).</p>
+</body>
+</html>
