@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Share Your Photos — Farah &amp; Mahmoud</title>
+<link rel="icon" href="assets/cover.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Cormorant+SC:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-deep:#071018; --navy:#0b1b2c; --pearl:#f4efe1; --champagne:#e9dcc0;
+    --gold:#c9a86a; --gold-soft:#e0c890; --ink:#dfe6ee;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100svh;
+    background:radial-gradient(120% 100% at 50% 0%, #123b58 0%, #0b1b2c 55%, #071018 100%);
+    color:var(--pearl); font-family:'Cormorant Garamond', serif;
+    display:flex; align-items:center; justify-content:center; padding:6vw 5vw;
+  }
+  .card{ max-width:480px; width:100%; text-align:center; }
+  .eyebrow{
+    font-family:'Cormorant SC','Cormorant Garamond',serif; letter-spacing:.36em; text-transform:uppercase;
+    font-size:.75rem; color:var(--gold-soft); display:block; margin-bottom:1rem;
+  }
+  h1{ font-family:'Playfair Display',serif; font-weight:500; font-size:clamp(1.7rem,6vw,2.4rem); margin:0 0 .6rem; }
+  p.lede{ color:#c7d2de; font-size:1.12rem; line-height:1.6; margin:0 0 2.4rem; }
+
+  .dropzone{
+    border:1.5px dashed rgba(224,200,144,.5); border-radius:12px;
+    padding:2.6rem 1.4rem; cursor:pointer; transition:border-color .25s ease, background .25s ease;
+  }
+  .dropzone.drag{ border-color:var(--gold-soft); background:rgba(224,200,144,.06); }
+  .dropzone svg{ width:34px; height:34px; color:var(--gold-soft); margin-bottom:.9rem; }
+  .dropzone .cta{ font-family:'Playfair Display',serif; font-size:1.15rem; color:var(--champagne); }
+  .dropzone .sub{ margin-top:.4rem; font-size:.92rem; color:#8fa1b4; }
+  input[type=file]{ display:none; }
+
+  #preview{ display:flex; flex-wrap:wrap; gap:.6rem; margin-top:1.4rem; justify-content:center; }
+  #preview .thumb{ width:64px; height:64px; border-radius:6px; object-fit:cover; border:1px solid rgba(224,200,144,.3); }
+
+  .submit-btn{
+    margin-top:2rem; width:100%; border:1px solid var(--gold-soft); background:transparent;
+    color:var(--champagne); padding:.95em; border-radius:999px; cursor:pointer;
+    font-family:'Cormorant SC','Cormorant Garamond',serif; letter-spacing:.24em; text-transform:uppercase;
+    font-size:.82rem; transition:background .3s ease, color .3s ease, opacity .3s ease;
+  }
+  .submit-btn:disabled{ opacity:.45; cursor:not-allowed; }
+  .submit-btn:not(:disabled):hover{ background:var(--gold-soft); color:var(--navy-deep); }
+
+  .status{ margin-top:1.2rem; font-size:.95rem; min-height:1.4em; color:#9fb0c2; }
+  .status.err{ color:#e8a9a0; }
+  .status.ok{ color:var(--gold-soft); }
+
+  .back{ display:inline-block; margin-top:2.2rem; font-size:.9rem; color:#8fa1b4; text-decoration:underline; text-underline-offset:3px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <span class="eyebrow">Farah &amp; Mahmoud · 23.09.2026</span>
+    <h1>Add to Our Album</h1>
+    <p class="lede">Choose your favourite photos and videos from tonight — they'll be added straight to the couple's private album.</p>
+
+    <div class="dropzone" id="dropzone">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>
+      </svg>
+      <div class="cta">Tap to choose photos or videos</div>
+      <div class="sub">or drag them here</div>
+      <input type="file" id="fileInput" accept="image/*,video/*" multiple capture="environment">
+    </div>
+
+    <div id="preview"></div>
+
+    <button class="submit-btn" id="submitBtn" disabled>Upload to the Album</button>
+    <p class="status" id="status"></p>
+
+    <a class="back" href="index.html">&larr; Back to the invitation</a>
+  </div>
+
+<script>
+  /* ============================================================
+     HOW THIS PAGE SAVES PHOTOS TO GOOGLE DRIVE
+     ------------------------------------------------------------
+     There is no way for a plain static website to write into someone's
+     personal Google Drive directly — Google requires a verified backend.
+     The simplest verified backend for this is a small Google Apps Script,
+     deployed as a Web App, running under the BRIDE'S OWN Google account.
+     Every file a guest uploads here is sent to that script, which drops
+     it into a Drive folder named "my engagement" (the script creates the
+     folder automatically the first time it runs).
+
+     Setup (one-time, ~5 minutes) — full walkthrough in README.md:
+       1. Go to script.google.com (signed in as the bride), paste in the
+          code from apps-script/Code.gs, and deploy it as a Web App
+          ("Execute as: Me", "Who has access: Anyone").
+       2. Copy the deployment URL it gives you.
+       3. Paste that URL below as SCRIPT_URL.
+     Until SCRIPT_URL is filled in, this page will show a friendly notice
+     instead of failing silently.
+     ============================================================ */
+  const SCRIPT_URL = "PASTE_YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const preview = document.getElementById('preview');
+  const submitBtn = document.getElementById('submitBtn');
+  const statusEl = document.getElementById('status');
+  let files = [];
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  ['dragover','dragenter'].forEach(evt =>
+    dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(evt =>
+    dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
+  dropzone.addEventListener('drop', e => addFiles(e.dataTransfer.files));
+  fileInput.addEventListener('change', e => addFiles(e.target.files));
+
+  function addFiles(list){
+    files = files.concat(Array.from(list));
+    preview.innerHTML = '';
+    files.forEach(f => {
+      if(f.type.startsWith('image/')){
+        const img = document.createElement('img');
+        img.className = 'thumb';
+        img.src = URL.createObjectURL(f);
+        preview.appendChild(img);
+      } else {
+        const div = document.createElement('div');
+        div.className = 'thumb';
+        div.style.display='flex'; div.style.alignItems='center'; div.style.justifyContent='center';
+        div.style.fontSize='.7rem'; div.style.color='#cbb886'; div.style.background='#12283f';
+        div.textContent = 'video';
+        preview.appendChild(div);
+      }
+    });
+    submitBtn.disabled = files.length === 0;
+  }
+
+  function toBase64(file){
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result.split(',')[1]);
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+
+  submitBtn.addEventListener('click', async () => {
+    if(!SCRIPT_URL || SCRIPT_URL.indexOf('PASTE_YOUR') === 0){
+      statusEl.className = 'status err';
+      statusEl.textContent = "Uploading isn't connected yet — see README.md to link this page to the bride's Drive.";
+      return;
+    }
+    submitBtn.disabled = true;
+    statusEl.className = 'status';
+    statusEl.textContent = 'Uploading, please keep this open…';
+
+    try{
+      for(const file of files){
+        const base64 = await toBase64(file);
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors', // Apps Script web apps don't return CORS headers;
+                            // no-cors still delivers the upload, it just
+                            // means we can't read the response back.
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            filename: file.name,
+            mimeType: file.type || 'application/octet-stream',
+            data: base64
+          })
+        });
+      }
+      statusEl.className = 'status ok';
+      statusEl.textContent = 'Thank you! Your photos have been added to Farah & Mahmoud\'s album. 💫';
+      preview.innerHTML = '';
+      files = [];
+    } catch(err){
+      statusEl.className = 'status err';
+      statusEl.textContent = 'Something went wrong sending your photos. Please try again.';
+      submitBtn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
